@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faturamento Omie – GMF</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:    #060c24;
+  --navy2:   #0d1535;
+  --navy3:   #111c42;
+  --blue:    #1e3a8a;
+  --accent:  #f97316;
+  --accent2: #fbbf24;
+  --purple:  #6366f1;
+  --purple2: #818cf8;
+  --green:   #22c55e;
+  --red:     #ef4444;
+  --white:   #ffffff;
+  --light:   #e0e4f8;
+  --muted:   #8892b8;
+  --card:    rgba(255,255,255,0.035);
+  --border:  rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--navy);
+  color: var(--light);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.35;
+}
+
+/* PROGRESS BAR */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  width: 0%;
+  z-index: 1000;
+  transition: width 0.15s linear;
+  box-shadow: 0 0 14px rgba(249,115,22,0.7);
+}
+
+/* NAV */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 16px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(6,12,36,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--white);
+  letter-spacing: -0.02em;
+}
+
+.nav-logo span { color: var(--accent); }
+
+.nav-steps { display: flex; gap: 6px; align-items: center; }
+
+.nav-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border2);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.nav-dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(249,115,22,0.7);
+  transform: scale(1.4);
+}
+.nav-dot.done { background: var(--green); }
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.22) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 50% at 15% 80%, rgba(249,115,22,0.1) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 40% at 85% 70%, rgba(99,102,241,0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 80%);
+  pointer-events: none;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(99,102,241,0.15);
+  border: 1px solid rgba(99,102,241,0.4);
+  color: var(--purple2);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 7px 18px;
+  border-radius: 100px;
+  margin-bottom: 32px;
+  opacity: 0;
+  animation: fadeDown 0.8s 0.1s ease forwards;
+}
+
+.badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--purple2);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1.0;
+  letter-spacing: -0.04em;
+  margin-bottom: 16px;
+  opacity: 0;
+  animation: fadeDown 0.8s 0.2s ease forwards;
+}
+
+.hero h1 .highlight {
+  background: linear-gradient(120deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 1.05rem;
+  font-weight: 300;
+  color: var(--muted);
+  max-width: 480px;
+  margin-bottom: 44px;
+  opacity: 0;
+  animation: fadeDown 0.8s 0.3s ease forwards;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: var(--white);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  padding: 15px 36px;
+  border-radius: 50px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 10px 40px rgba(249,115,22,0.4);
+  opacity: 0;
+  animation: fadeDown 0.8s 0.4s ease forwards;
+}
+
+.hero-cta:hover { transform: translateY(-3px); box-shadow: 0 18px 50px rgba(249,115,22,0.5); }
+.hero-cta svg { transition: transform 0.2s; }
+.hero-cta:hover svg { transform: translateX(4px); }
+
+.hero-stats {
+  display: flex;
+  gap: 48px;
+  margin-top: 72px;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.6s ease forwards;
+}
+
+.stat { text-align: center; }
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1;
+}
+.stat-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.stat-divider { width: 1px; background: var(--border2); }
+
+/* SECTIONS */
+.section {
+  padding: 100px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.section.visible { opacity: 1; transform: translateY(0); }
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 56px;
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--white);
+  box-shadow: 0 8px 24px rgba(99,102,241,0.35);
+  position: relative;
+}
+.step-number::after {
+  content: '';
+  position: absolute; inset: -1px;
+  border-radius: 17px;
+  border: 1px solid rgba(99,102,241,0.5);
+}
+
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.section-desc {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-top: 6px;
+  max-width: 560px;
+}
+
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border2), transparent);
+  margin: 0 24px;
+}
+
+/* CARD GRID */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+  border-color: var(--border2);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+}
+
+.card-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--white);
+  margin-bottom: 10px;
+}
+.card-body {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* STEPS LIST */
+.steps-list { display: flex; flex-direction: column; gap: 16px; }
+
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 24px 28px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.step-item:hover { border-color: var(--border2); transform: translateX(4px); }
+
+.step-icon {
+  flex-shrink: 0;
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.step-item-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--white);
+  margin-bottom: 4px;
+}
+.step-item-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+/* TABLE */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.data-table th {
+  background: rgba(99,102,241,0.12);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--purple2);
+  padding: 16px 24px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 18px 24px;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: rgba(255,255,255,0.02); }
+.data-table td:first-child { font-weight: 500; color: var(--white); white-space: nowrap; }
+.data-table td:last-child { color: var(--muted); }
+
+/* TWO COL */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ALERTS */
+.alert {
+  padding: 20px 24px;
+  border-radius: 14px;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.alert-warn   { background: rgba(249,115,22,0.08);  border: 1px solid rgba(249,115,22,0.25); color: #fed7aa; }
+.alert-info   { background: rgba(99,102,241,0.08);  border: 1px solid rgba(99,102,241,0.25); color: #c7d2fe; }
+.alert-danger { background: rgba(239,68,68,0.08);   border: 1px solid rgba(239,68,68,0.25);  color: #fca5a5; }
+.alert-success{ background: rgba(34,197,94,0.08);   border: 1px solid rgba(34,197,94,0.25);  color: #bbf7d0; }
+.alert-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+.alert-text strong { display: block; font-weight: 600; margin-bottom: 4px; color: var(--white); font-size: 0.9rem; }
+
+/* CHECKLIST */
+.checklist { display: flex; flex-direction: column; gap: 12px; }
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s;
+  user-select: none;
+}
+.check-item:hover { border-color: var(--border2); background: rgba(255,255,255,0.05); }
+.check-item.checked { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.06); }
+
+.check-box {
+  width: 22px; height: 22px;
+  border-radius: 7px;
+  border: 2px solid var(--border2);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s;
+}
+.check-item.checked .check-box { background: var(--green); border-color: var(--green); }
+.check-box-icon { display: none; }
+.check-item.checked .check-box-icon { display: block; }
+.check-label { font-size: 0.88rem; color: var(--muted); transition: color 0.25s; }
+.check-item.checked .check-label { color: var(--light); text-decoration: line-through; }
+
+/* TAGS */
+.tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+.tag-orange { background: rgba(249,115,22,0.15); color: var(--accent); border: 1px solid rgba(249,115,22,0.3); }
+.tag-yellow { background: rgba(251,191,36,0.12); color: var(--accent2); border: 1px solid rgba(251,191,36,0.3); }
+.tag-purple { background: rgba(99,102,241,0.15); color: var(--purple2); border: 1px solid rgba(99,102,241,0.3); }
+.tag-red    { background: rgba(239,68,68,0.12);  color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+.tag-green  { background: rgba(34,197,94,0.12);  color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+
+/* TIMELINE */
+.timeline {
+  position: relative;
+  padding-left: 36px;
+  display: flex;
+  flex-direction: column;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 11px; top: 16px; bottom: 16px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--purple), rgba(99,102,241,0.1));
+}
+.tl-item { position: relative; padding: 0 0 32px 28px; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-dot {
+  position: absolute;
+  left: -36px; top: 4px;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--navy2);
+  border: 2px solid var(--purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--purple2);
+  box-shadow: 0 0 12px rgba(99,102,241,0.3);
+}
+.tl-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--white); margin-bottom: 6px; }
+.tl-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+/* FINAL SECTION */
+.final-section {
+  padding: 120px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.final-section::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 70% at 50% 50%, rgba(99,102,241,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+.final-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  color: var(--white);
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+.final-sub { font-size: 1rem; color: var(--muted); margin-bottom: 44px; }
+
+/* ANIMATIONS */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--navy); }
+::-webkit-scrollbar-thumb { background: var(--navy3); border-radius: 3px; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  nav { padding: 16px 20px; }
+  .nav-steps { display: none; }
+  .hero-stats { gap: 24px; }
+  .stat-num { font-size: 1.7rem; }
+  .section { padding: 70px 16px; }
+  .section-header { gap: 16px; }
+  .data-table { display: block; overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav>
+  <div class="nav-logo">GMF <span>·</span> Omie</div>
+  <div class="nav-steps" id="navDots"></div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+
+  <div class="badge"><div class="badge-dot"></div>Sistema Omie 2026</div>
+
+  <h1>Processo de<br><span class="highlight">Faturamento</span></h1>
+
+  <p class="hero-sub">
+    Guia completo e interativo para emissão de notas fiscais, rastreabilidade de lotes e gestão de transporte no sistema Omie.
+  </p>
+
+  <a href="#etapa1" class="hero-cta">
+    Iniciar treinamento
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </a>
+
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">8</div>
+      <div class="stat-label">Etapas</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <div class="stat-num">~15<span style="font-size:1rem">min</span></div>
+      <div class="stat-label">Leitura</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <div class="stat-num">24h</div>
+      <div class="stat-label">Cancelar NF</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ETAPA 1 -->
+<section class="section" id="etapa1" data-step="1">
+  <div class="section-header">
+    <div class="step-number">1</div>
+    <div>
+      <div class="section-title">Acesso ao Módulo de Vendas</div>
+      <div class="section-desc">O ponto de partida para qualquer faturamento começa pelo módulo correto.</div>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon" style="background:rgba(249,115,22,0.12);">🔐</div>
+      <div class="card-title">Login no Sistema</div>
+      <div class="card-body">Certifique-se de estar logado com credenciais que possuam acesso às funcionalidades de vendas e faturamento.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(99,102,241,0.12);">🛒</div>
+      <div class="card-title">Vendas e NF-e</div>
+      <div class="card-body">No menu principal, localize a opção <strong style="color:var(--accent)">Vendas e NF-e</strong>, destacada em <strong style="color:var(--accent)">laranja</strong>. Clique para abrir o submenu.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(34,197,94,0.1);">📋</div>
+      <div class="card-title">Cadastrar Pedidos e Faturar</div>
+      <div class="card-body">No submenu, selecione <strong style="color:var(--white)">Cadastrar Pedidos e Faturar</strong>. Você acessará a interface principal de pedidos.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ETAPA 2 -->
+<section class="section" id="etapa2" data-step="2">
+  <div class="section-header">
+    <div class="step-number">2</div>
+    <div>
+      <div class="section-title">Buscar e Preparar o Pedido</div>
+      <div class="section-desc">Localize o pedido específico e ajuste as previsões antes de avançar.</div>
+    </div>
+  </div>
+
+  <div class="steps-list">
+    <div class="step-item">
+      <div class="step-icon" style="background:rgba(249,115,22,0.12);">🚚</div>
+      <div>
+        <div class="step-item-title">Receber Informações da Logística</div>
+        <div class="step-item-desc">Obtenha da equipe de logística o <strong style="color:var(--white)">número do pedido</strong> e as <strong style="color:var(--white)">informações de rastreabilidade</strong>. Esses dados são indispensáveis para localizar o pedido correto no sistema.</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-icon" style="background:rgba(99,102,241,0.12);">🔍</div>
+      <div>
+        <div class="step-item-title">Pesquisar no Campo de Busca</div>
+        <div class="step-item-desc">Utilize o campo de busca na parte superior esquerda para inserir o número do pedido. O sistema filtrará e exibirá o resultado rapidamente.</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-icon" style="background:rgba(34,197,94,0.1);">📅</div>
+      <div>
+        <div class="step-item-title">Atualizar Previsão de Faturamento</div>
+        <div class="step-item-desc">
+          <span class="tag tag-orange" style="margin-right:6px;margin-bottom:8px;display:inline-block">Parcelado</span> A previsão deve corresponder à <strong style="color:var(--white)">data prevista de entrega</strong>, garantindo a geração correta dos boletos.<br><br>
+          <span class="tag tag-yellow" style="margin-right:6px">À vista</span> Utilize a <strong style="color:var(--white)">data real de faturamento</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ETAPA 3 -->
+<section class="section" id="etapa3" data-step="3">
+  <div class="section-header">
+    <div class="step-number">3</div>
+    <div>
+      <div class="section-title">Edição do Item e Acesso aos Detalhes</div>
+      <div class="section-desc">Insira dados essenciais de rastreabilidade e controle de qualidade para cada produto.</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot">1</div>
+        <div class="tl-title">Abrir o Pedido</div>
+        <div class="tl-desc">Com o pedido localizado e previsão atualizada, acesse a tela de detalhes do pedido.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">2</div>
+        <div class="tl-title">Clicar em "Editar Item"</div>
+        <div class="tl-desc">Dentro da tela de detalhes, localize e clique em <strong style="color:var(--white)">Editar Item</strong> para modificar informações individualmente por produto.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">3</div>
+        <div class="tl-title">Acessar "Lote e Validade"</div>
+        <div class="tl-desc">Na nova janela, clique em <strong style="color:var(--white)">Lote e Validade</strong> — área específica para dados de produção e controle de qualidade.</div>
+      </div>
+    </div>
+    <div class="alert alert-info">
+      <div class="alert-icon">ℹ️</div>
+      <div class="alert-text">
+        <strong>Por que isso é importante?</strong>
+        Esta etapa garante conformidade com regulamentações sanitárias e a capacidade de rastrear qualquer produto com inconsistências antes que chegue ao cliente.
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ETAPA 4 -->
+<section class="section" id="etapa4" data-step="4">
+  <div class="section-header">
+    <div class="step-number">4</div>
+    <div>
+      <div class="section-title">Lote, Validade e Produção</div>
+      <div class="section-desc">Precisão total no preenchimento. Cada campo impacta a rastreabilidade e a segurança do produto.</div>
+    </div>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Campo</th>
+        <th>O que preencher</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>🔢 Número do Lote</td>
+        <td>Código alfanumérico único que identifica a batelada de fabricação do produto.</td>
+      </tr>
+      <tr>
+        <td>📦 Quantidade de Produto</td>
+        <td>A quantidade exata descrita no item do pedido.</td>
+      </tr>
+      <tr>
+        <td>🏭 Data de Fabricação</td>
+        <td>Data exata de fabricação no formato <strong style="color:var(--white)">DD/MM/AAAA</strong>.</td>
+      </tr>
+      <tr>
+        <td>⏳ Data de Validade</td>
+        <td>Data limite para consumo conforme embalagem ou ficha técnica. Formato <strong style="color:var(--white)">DD/MM/AAAA</strong>.</td>
+      </tr>
+      <tr>
+        <td>🔗 Código de Agregação (OP)</td>
+        <td>Número da Ordem de Produção vinculada ao lote. Como obter: ver <strong style="color:var(--white)">Etapa 5</strong>.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px;">
+    <div class="alert alert-danger">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-text">
+        <strong>Atenção obrigatória</strong>
+        Informações incorretas podem gerar fraude fiscal e aplicação de multas. Em caso de dúvida, consulte o coordenador antes de prosseguir.
+      </div>
+    </div>
+    <div class="alert alert-success">
+      <div class="alert-icon">✅</div>
+      <div class="alert-text">
+        <strong>Benefício direto</strong>
+        O correto preenchimento garante conformidade com normas sanitárias e a capacidade de realizar recalls com precisão, protegendo a saúde do consumidor e a reputação da empresa.
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ETAPA 5 -->
+<section class="section" id="etapa5" data-step="5">
+  <div class="section-header">
+    <div class="step-number">5</div>
+    <div>
+      <div class="section-title">Buscar Ordem de Produção para Agregação</div>
+      <div class="section-desc">O código de agregação fecha o ciclo de rastreabilidade completo do produto.</div>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon" style="background:rgba(249,115,22,0.12);">🗂️</div>
+      <div class="card-title">1 · Acessar Módulo de Compras</div>
+      <div class="card-body">
+        No menu principal do Omie, vá em <strong style="color:var(--accent)">Compras</strong>.<br><br>
+        Selecione <strong style="color:var(--white)">Ordem de Produção</strong> e depois <strong style="color:var(--white)">Etapa de Produção</strong>.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(99,102,241,0.12);">📆</div>
+      <div class="card-title">2 · Pesquisar pela Data de Fabricação</div>
+      <div class="card-body">Na tela de Etapa de Produção, pesquise pela <strong style="color:var(--white)">data de fabricação</strong> do item sendo faturado. O sistema listará as ordens relacionadas a essa data.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(34,197,94,0.1);">📋</div>
+      <div class="card-title">3 · Conferir e Copiar o Código</div>
+      <div class="card-body">Localize a ordem correspondente ao lote. <strong style="color:var(--white)">Confira as observações</strong> para garantir que é a correta e copie o código de agregação exibido.</div>
+    </div>
+  </div>
+
+  <div class="alert alert-info" style="margin-top:20px;">
+    <div class="alert-icon">💡</div>
+    <div class="alert-text">
+      <strong>Próximo passo</strong>
+      Cole esse código no campo "Código de Agregação" da Etapa 4, fechando o ciclo de informações de produção e rastreabilidade.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ETAPA 6 -->
+<section class="section" id="etapa6" data-step="6">
+  <div class="section-header">
+    <div class="step-number">6</div>
+    <div>
+      <div class="section-title">Conferência de Quantidade e Salvamento</div>
+      <div class="section-desc">Erros aqui geram divergências de estoque e problemas na entrega.</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="steps-list">
+      <div class="step-item">
+        <div class="step-icon" style="background:rgba(249,115,22,0.12);">⚖️</div>
+        <div>
+          <div class="step-item-title">Conferência da Quantidade</div>
+          <div class="step-item-desc">Verifique se a quantidade faturada corresponde exatamente à quantidade a ser expedida. Compare com o pedido original e, se possível, com a contagem física.</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-icon" style="background:rgba(34,197,94,0.1);">💾</div>
+        <div>
+          <div class="step-item-title">Salvar Cada Tela</div>
+          <div class="step-item-desc">O Omie <strong style="color:var(--white)">não salva automaticamente</strong>. Salve progressivamente após cada alteração para evitar perda de dados e retrabalho.</div>
+        </div>
+      </div>
+    </div>
+    <div class="alert alert-warn">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-text">
+        <strong>Não pule o salvamento!</strong>
+        Qualquer dado não salvo será perdido. Salve ao terminar cada item antes de avançar. A atenção aqui garante que o cliente receba exatamente o que foi solicitado.
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ETAPA 7 -->
+<section class="section" id="etapa7" data-step="7">
+  <div class="section-header">
+    <div class="step-number">7</div>
+    <div>
+      <div class="section-title">Transporte e Previsão de Entrega</div>
+      <div class="section-desc">Defina corretamente a transportadora, modalidade de frete e estimativa de entrega.</div>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon" style="background:rgba(99,102,241,0.12);">🚛</div>
+      <div class="card-title">Seleção da Transportadora</div>
+      <div class="card-body">
+        Informe no campo <strong style="color:var(--white)">TRANSPORTADORA</strong>:<br><br>
+        • Nome da transportadora responsável<br>
+        • <em>Correios</em> (quando aplicável)<br>
+        • Nome do motorista (Fretebras)<br><br>
+        Para envios próprios (Proffi, DMS ou MF Paris): <strong style="color:var(--accent)">obrigatório</strong> informar o nome da empresa.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(251,191,36,0.12);">🏷️</div>
+      <div class="card-title">Modalidade de Frete</div>
+      <div class="card-body">
+        <span class="tag tag-orange" style="margin-bottom:10px;display:inline-block">FOB</span> Retirada — cliente retira o produto.<br><br>
+        <span class="tag tag-purple" style="margin-bottom:10px;display:inline-block">CIF</span> Entrega — empresa entrega ao cliente.<br><br>
+        "Motorista da Casa" ou FOB: previsão de entrega = <strong style="color:var(--white)">mesmo dia da emissão</strong>.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(34,197,94,0.1);">📅</div>
+      <div class="card-title">Previsão de Entrega</div>
+      <div class="card-body">
+        Use a data informada pelo responsável do frete + <strong style="color:var(--white)">1 dia de segurança</strong> para imprevistos.<br><br>
+        <em style="color:var(--accent2)">Após a entrega, atualize com a data real de entrega.</em>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ETAPA 8 -->
+<section class="section" id="etapa8" data-step="8">
+  <div class="section-header">
+    <div class="step-number" style="background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 8px 24px rgba(249,115,22,0.4);">8</div>
+    <div>
+      <div class="section-title">Finalização do Faturamento</div>
+      <div class="section-desc">Este é o ponto de não retorno. Revise tudo com atenção máxima antes de emitir a nota fiscal.</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:28px;">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;">
+      ✅ Checklist de Verificação Final
+    </div>
+    <div class="checklist" id="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box">
+          <svg class="check-box-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="check-label">Quantidade dos itens conferida e correta</div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box">
+          <svg class="check-box-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="check-label">Dados de lote e validade revisados</div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box">
+          <svg class="check-box-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="check-label">Código de agregação (Ordem de Produção) preenchido</div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box">
+          <svg class="check-box-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="check-label">Transportadora e modalidade de frete definidas</div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box">
+          <svg class="check-box-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="check-label">Previsão de entrega informada corretamente</div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box">
+          <svg class="check-box-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="check-label">Valores e impostos verificados</div>
+      </div>
+    </div>
+    <div id="checklist-status" style="margin-top:14px;font-size:0.82rem;color:var(--muted);font-style:italic;"></div>
+  </div>
+
+  <div class="two-col">
+    <div class="steps-list">
+      <div class="step-item">
+        <div class="step-icon" style="background:rgba(249,115,22,0.12);">📌</div>
+        <div>
+          <div class="step-item-title">Localizar o Botão</div>
+          <div class="step-item-desc">No menu lateral esquerdo da tela de faturamento, localize a opção <strong style="color:var(--white)">FATURAR AGORA</strong>.</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-icon" style="background:rgba(34,197,94,0.1);">🖱️</div>
+        <div>
+          <div class="step-item-title">Emitir a Nota Fiscal</div>
+          <div class="step-item-desc">Clique em <strong style="color:var(--white)">FATURAR AGORA</strong>. O sistema processará e emitirá a NF-e, pronta para envio ao cliente e à contabilidade.</div>
+        </div>
+      </div>
+    </div>
+    <div class="alert alert-danger">
+      <div class="alert-icon">🔴</div>
+      <div class="alert-text">
+        <strong>Prazo de Cancelamento da NF</strong>
+        O cancelamento só pode ser feito em até <strong>24 horas</strong> após a emissão. Após esse prazo, qualquer correção exigirá carta de correção ou outro procedimento fiscal formal.
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SUPORTE -->
+<section class="section" id="suporte" data-step="9">
+  <div class="section-header">
+    <div class="step-number" style="background:linear-gradient(135deg,#374151,#1f2937);box-shadow:0 8px 24px rgba(0,0,0,0.4);">?</div>
+    <div>
+      <div class="section-title">Dúvidas ou Erros?</div>
+      <div class="section-desc">Saiba exatamente a quem recorrer em cada situação.</div>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon" style="background:rgba(99,102,241,0.12);">👥</div>
+      <div class="card-title">Consulte a Liderança</div>
+      <div class="card-body">Em caso de incertezas ou erros no sistema, acione a <strong style="color:var(--white)">liderança imediata do setor</strong>. Eles orientam ou escalam para a área responsável.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(249,115,22,0.12);">🚚</div>
+      <div class="card-title">Verifique com a Logística</div>
+      <div class="card-body">Divergências de quantidade, pedido ou informações de transporte devem ser tratadas diretamente com a <strong style="color:var(--white)">equipe de logística</strong>. Comunicação clara evita gargalos.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(34,197,94,0.1);">📖</div>
+      <div class="card-title">Consulte o Manual Interno</div>
+      <div class="card-body">Para questões operacionais, o <strong style="color:var(--white)">manual interno</strong> é uma ferramenta valiosa. Mantenha-o sempre acessível e consulte regularmente.</div>
+    </div>
+  </div>
+
+  <div class="alert alert-info" style="margin-top:24px;">
+    <div class="alert-icon">🤝</div>
+    <div class="alert-text">
+      <strong>Lembre-se sempre</strong>
+      A precisão e a correção dos dados são responsabilidade de todos os envolvidos. Colaboração e busca por informações são essenciais para a eficiência de todo o processo de faturamento.
+    </div>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section class="final-section">
+  <div style="display:inline-block;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);color:#4ade80;font-size:0.72rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;padding:7px 18px;border-radius:100px;margin-bottom:28px;">
+    🎉 Treinamento Concluído
+  </div>
+  <div class="final-title">Pronto para faturar<br>com confiança.</div>
+  <div class="final-sub">Siga as 8 etapas, preencha com atenção e em caso de dúvida, consulte sempre antes de avançar.</div>
+  <a href="#top" class="hero-cta" style="text-decoration:none;">
+    Revisar do início
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </a>
+</section>
+
+<script>
+// Progress bar
+const progressBar = document.getElementById('progress-bar');
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  progressBar.style.width = Math.min((scrollTop / docHeight) * 100, 100) + '%';
+});
+
+// Nav dots
+const steps = document.querySelectorAll('[data-step]');
+const navDots = document.getElementById('navDots');
+
+steps.forEach((s, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'nav-dot';
+  dot.title = s.dataset.step === '9' ? 'Suporte' : `Etapa ${s.dataset.step}`;
+  dot.addEventListener('click', () => s.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  navDots.appendChild(dot);
+});
+
+const dots = navDots.querySelectorAll('.nav-dot');
+
+// Intersection observer
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      const idx = [...steps].indexOf(entry.target);
+      dots.forEach((d, i) => {
+        d.classList.remove('active', 'done');
+        if (i === idx) d.classList.add('active');
+        else if (i < idx) d.classList.add('done');
+      });
+    }
+  });
+}, { threshold: 0.2 });
+
+steps.forEach(s => observer.observe(s));
+
+// Checklist
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+  const items = document.querySelectorAll('.check-item');
+  const checked = document.querySelectorAll('.check-item.checked').length;
+  const status = document.getElementById('checklist-status');
+  if (checked === items.length) {
+    status.textContent = '✅ Tudo conferido! Pode prosseguir com o faturamento.';
+    status.style.color = '#4ade80';
+    progressBar.style.boxShadow = '0 0 14px rgba(34,197,94,0.7)';
+    progressBar.style.background = 'linear-gradient(90deg, #22c55e, #4ade80)';
+  } else {
+    status.textContent = `${checked} de ${items.length} itens verificados.`;
+    status.style.color = 'var(--muted)';
+    progressBar.style.boxShadow = '0 0 14px rgba(249,115,22,0.7)';
+    progressBar.style.background = 'linear-gradient(90deg, var(--accent), var(--accent2))';
+  }
+}
+</script>
+</body>
+</html>
